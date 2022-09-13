@@ -31,6 +31,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
     ShowedItemsVisibility? itemsVisibility,
     List<T>? initialPickedItems,
     Widget? title,
+    String? hint,
     Color? pickedItemsBorderColor,
     Color? outerContainerBorderColor,
     Color? showedItemsScrollbarColor,
@@ -45,6 +46,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
     bool? showClearAllButton,
     InputDecoration? searchFieldInputDecoration,
     TextStyle? searchFieldTextStyle,
+    TextStyle? searchFieldHintStyle,
     Widget? noResultsWidget,
     double? pickedItemSpacing,
     double? pickedItemsContainerMaxHeight,
@@ -74,6 +76,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
       MultipleSearchSelection._(
         items: items,
         title: title,
+        hint: hint,
         key: key ?? ValueKey(items.hashCode),
         fieldToCheck: fieldToCheck,
         itemBuilder: itemBuilder,
@@ -107,6 +110,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
         pickedItemsScrollbarThickness: pickedItemsScrollbarThickness,
         searchFieldInputDecoration: searchFieldInputDecoration,
         searchFieldTextStyle: searchFieldTextStyle,
+        searchFieldHintStyle: searchFieldHintStyle,
         selectAllButton: selectAllButton,
         showClearAllButton: showClearAllButton,
         showItemsButton: showItemsButton,
@@ -142,6 +146,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
     this.onItemRemoved,
     this.onTapShowedItem,
     this.title,
+    this.hint,
     this.maximumShowItemsHeight = 150,
     this.showClearAllButton = true,
     this.showSelectAllButton = true,
@@ -179,6 +184,7 @@ class MultipleSearchSelection<T> extends StatefulWidget {
     this.selectAllButton,
     this.clearAllButton,
     this.searchFieldTextStyle,
+    this.searchFieldHintStyle,
     this.onTapClearAll,
     this.onTapSelectAll,
     this.onTapShowItems,
@@ -188,6 +194,9 @@ class MultipleSearchSelection<T> extends StatefulWidget {
 
   /// The title widget on top of the picked items.
   final Widget? title;
+
+  /// The title widget on top of the picked items.
+  final String? hint;
 
   /// The border color of the picked items container.
   final Color? pickedItemsBorderColor;
@@ -248,6 +257,9 @@ class MultipleSearchSelection<T> extends StatefulWidget {
 
   /// The text style of the search text field.
   final TextStyle? searchFieldTextStyle;
+
+  /// The text style of the search text field.
+  final TextStyle? searchFieldHintStyle;
 
   /// What is shown when there are no more results to select.
   final Widget? noResultsWidget;
@@ -503,7 +515,6 @@ class _MultipleSearchSelectionState<T>
     );
     widget.onItemAdded?.call(pickedItem);
   }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -512,64 +523,277 @@ class _MultipleSearchSelectionState<T>
         if (widget.title != null) ...[
           widget.title!,
         ],
-        if (pickedItems.isNotEmpty)
-          // picked item chips
-          Container(
-            width: MediaQuery.of(context).size.width,
-            constraints: BoxConstraints(
-              maxHeight: widget.pickedItemsContainerMaxHeight ?? 150,
-              minHeight: widget.pickedItemsContainerMinHeight ?? 50,
-            ),
-            decoration: widget.pickedItemsBoxDecoration ??
-                BoxDecoration(
-                  border: pickedItems.isNotEmpty
-                      ? Border.all(
-                          color: Colors.grey.withOpacity(0.5),
-                        )
-                      : null,
-                ),
-            child: RawScrollbar(
-              thumbVisibility: widget.showPickedItemScrollbar,
-              thumbColor: widget.pickedItemsScrollbarColor,
-              minOverscrollLength:
-                  widget.pickedItemsScrollbarMinOverscrollLength ?? 5,
-              minThumbLength: widget.pickedItemsScrollbarMinThumbLength ?? 30,
-              thickness: widget.pickedItemsScrollbarThickness ?? 10,
-              radius:
-                  widget.pickedItemsScrollbarRadius ?? const Radius.circular(5),
-              controller:
-                  widget.pickedItemsScrollController ?? _pickedItemsController,
-              child: ScrollConfiguration(
-                behavior:
-                    ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                child: SingleChildScrollView(
-                  controller: widget.pickedItemsScrollController ??
-                      _pickedItemsController,
-                  physics: widget.pickedItemsScrollPhysics,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Wrap(
-                      spacing: widget.pickedItemSpacing ?? 5,
-                      runSpacing: widget.pickedItemSpacing ?? 5,
-                      children: [
-                        ...pickedItems.map(
-                          (e) => GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              _onRemoveItem(e);
-                            },
-                            child: IgnorePointer(
-                              child: widget.pickedItemBuilder.call(e),
-                            ),
+        SizedBox(height: 10,),
+        GestureDetector(child: Container(
+          width: MediaQuery.of(context).size.width,
+          constraints: BoxConstraints(
+            maxHeight: widget.pickedItemsContainerMaxHeight ?? (pickedItems.isNotEmpty ? 150 : 50),
+            minHeight: widget.pickedItemsContainerMinHeight ?? 50,
+          ),
+          decoration: widget.pickedItemsBoxDecoration ??
+              BoxDecoration(
+                border: pickedItems.isNotEmpty
+                    ? Border.all(
+                  color: Colors.grey.withOpacity(0.5),
+                )
+                    : null,
+              ),
+          child: pickedItems.isNotEmpty ? RawScrollbar(
+            thumbVisibility: widget.showPickedItemScrollbar,
+            thumbColor: widget.pickedItemsScrollbarColor,
+            minOverscrollLength:
+            widget.pickedItemsScrollbarMinOverscrollLength ?? 5,
+            minThumbLength: widget.pickedItemsScrollbarMinThumbLength ?? 30,
+            thickness: widget.pickedItemsScrollbarThickness ?? 10,
+            radius:
+            widget.pickedItemsScrollbarRadius ?? const Radius.circular(5),
+            controller:
+            widget.pickedItemsScrollController ?? _pickedItemsController,
+            child: ScrollConfiguration(
+              behavior:
+              ScrollConfiguration.of(context).copyWith(scrollbars: false),
+              child: SingleChildScrollView(
+                controller: widget.pickedItemsScrollController ??
+                    _pickedItemsController,
+                physics: widget.pickedItemsScrollPhysics,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Wrap(
+                    spacing: widget.pickedItemSpacing ?? 5,
+                    runSpacing: widget.pickedItemSpacing ?? 5,
+                    children: [
+                      ...pickedItems.map(
+                            (e) => GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            _onRemoveItem(e);
+                          },
+                          child: IgnorePointer(
+                            child: widget.pickedItemBuilder.call(e),
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
             ),
-          ),
+          ) : Align(alignment: Alignment.centerLeft,child:Padding(
+            padding: EdgeInsets.only(left: 10,right: 10),
+            child: Text(widget.hint ?? '',style:widget.searchFieldHintStyle,),
+          )),
+        ),
+        onTap: (){
+          showDialog(
+            context: context,
+            builder: (context) => StatefulBuilder(
+              builder: (context, stateSetter) {
+                return Dialog(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            top: BorderSide(
+                              color: widget
+                                  .outerContainerBorderColor ??
+                                  Colors.grey.withOpacity(0.5),
+                            ),
+                            left: BorderSide(
+                              color: widget
+                                  .outerContainerBorderColor ??
+                                  Colors.grey.withOpacity(0.5),
+                            ),
+                            right: BorderSide(
+                              color: widget
+                                  .outerContainerBorderColor ??
+                                  Colors.grey.withOpacity(0.5),
+                            ),
+                            bottom: BorderSide(
+                              color: Colors.grey.withOpacity(0.5),
+                            ),
+                          ),
+                        ),
+                        child: TextField(
+                          key: const Key('toggle-searchfield'),
+                          focusNode: _textFieldFocus,
+                          controller: _textEditingController,
+                          style: widget.searchFieldTextStyle,
+                          decoration: widget
+                              .searchFieldInputDecoration ??
+                              InputDecoration(
+                                contentPadding:
+                                const EdgeInsets.only(
+                                  left: 6,
+                                ),
+                                hintText: 'Type here to search',
+                                hintStyle: widget.searchFieldHintStyle,
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius:
+                                  BorderRadius.circular(20),
+                                ),
+                              ),
+                          onChanged: (value) {
+                            if (widget.fuzzySearch ==
+                                FuzzySearch.jaro) {
+                              showedItems = allItems.where(
+                                    (item) {
+                                  return widget.fieldToCheck
+                                      .call(item)
+                                      .toLowerCase()
+                                      .contains(value) ||
+                                      (getJaro(
+                                        widget.fieldToCheck
+                                            .call(item),
+                                        value,
+                                      ) >=
+                                          0.8);
+                                },
+                              ).toList();
+                            } else if (widget.fuzzySearch ==
+                                FuzzySearch.levenshtein) {
+                              showedItems = allItems.where(
+                                    (item) {
+                                  return widget.fieldToCheck
+                                      .call(item)
+                                      .toLowerCase()
+                                      .contains(value) ||
+                                      (getLevenshtein(
+                                        widget.fieldToCheck
+                                            .call(item),
+                                        value,
+                                      ) <=
+                                          2);
+                                },
+                              ).toList();
+                            } else {
+                              showedItems = allItems
+                                  .where(
+                                    (item) => widget.fieldToCheck
+                                    .call(item)
+                                    .toLowerCase()
+                                    .contains(value),
+                              )
+                                  .toList();
+                            }
+                            setState(() {});
+                            stateSetter(() {});
+                          },
+                        ),
+                      ),
+                      Container(
+                        constraints: BoxConstraints(
+                          maxHeight:
+                          widget.maximumShowItemsHeight,
+                        ),
+                        decoration: widget
+                            .showedItemsBoxDecoration ??
+                            BoxDecoration(
+                              color: widget
+                                  .showedItemsBackgroundColor ??
+                                  Colors.grey.withOpacity(0.1),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: widget
+                                      .outerContainerBorderColor ??
+                                      Colors.grey
+                                          .withOpacity(0.5),
+                                ),
+                                left: BorderSide(
+                                  color: widget
+                                      .outerContainerBorderColor ??
+                                      Colors.grey
+                                          .withOpacity(0.5),
+                                ),
+                                right: BorderSide(
+                                  color: widget
+                                      .outerContainerBorderColor ??
+                                      Colors.grey
+                                          .withOpacity(0.5),
+                                ),
+                              ),
+                            ),
+                        child: RawScrollbar(
+                          controller: widget
+                              .showedItemsScrollController ??
+                              _showedItemsScrollController,
+                          thumbColor:
+                          widget.showedItemsScrollbarColor,
+                          thickness: widget
+                              .showedItemsScrollbarMinThumbLength ??
+                              10,
+                          minThumbLength: widget
+                              .showedItemsScrollbarMinThumbLength ??
+                              30,
+                          minOverscrollLength: widget
+                              .showedItemsScrollbarMinOverscrollLength ??
+                              5,
+                          radius:
+                          widget.showedItemsScrollbarRadius ??
+                              const Radius.circular(5),
+                          thumbVisibility:
+                          widget.showShowedItemsScrollbar,
+                          child: ScrollConfiguration(
+                            behavior:
+                            ScrollConfiguration.of(context)
+                                .copyWith(
+                              scrollbars: false,
+                            ),
+                            child: ListView(
+                              padding: EdgeInsets.zero,
+                              primary: false,
+                              shrinkWrap: true,
+                              controller: widget
+                                  .showedItemsScrollController ??
+                                  _showedItemsScrollController,
+                              children: showedItems.isEmpty
+                                  ? [
+                                Padding(
+                                  padding:
+                                  const EdgeInsets.all(
+                                    6.0,
+                                  ),
+                                  child: widget
+                                      .noResultsWidget ??
+                                      const Text(
+                                        'No results',
+                                      ),
+                                )
+                              ]
+                                  : showedItems.map((T item) {
+                                return GestureDetector(
+                                  behavior: HitTestBehavior
+                                      .opaque,
+                                  onTap: () {
+                                    _onAddItem(item);
+                                    stateSetter(() {});
+                                    setState(() {});
+                                  },
+                                  child: IgnorePointer(
+                                    child:
+                                    widget.itemBuilder(
+                                      item,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ).whenComplete(() {
+            _textEditingController.clear();
+            showedItems = allItems;
+          });
+        },),
         if ((widget.showClearAllButton ?? true) ||
             widget.itemsVisibility == ShowedItemsVisibility.toggle) ...[
           const SizedBox(
@@ -580,234 +804,6 @@ class _MultipleSearchSelectionState<T>
             children: [
               Row(
                 children: [
-                  if (widget.itemsVisibility ==
-                      ShowedItemsVisibility.toggle) ...[
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        widget.onTapShowItems?.call();
-                        showDialog(
-                          context: context,
-                          builder: (context) => StatefulBuilder(
-                            builder: (context, stateSetter) {
-                              return Dialog(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border(
-                                          top: BorderSide(
-                                            color: widget
-                                                    .outerContainerBorderColor ??
-                                                Colors.grey.withOpacity(0.5),
-                                          ),
-                                          left: BorderSide(
-                                            color: widget
-                                                    .outerContainerBorderColor ??
-                                                Colors.grey.withOpacity(0.5),
-                                          ),
-                                          right: BorderSide(
-                                            color: widget
-                                                    .outerContainerBorderColor ??
-                                                Colors.grey.withOpacity(0.5),
-                                          ),
-                                          bottom: BorderSide(
-                                            color: Colors.grey.withOpacity(0.5),
-                                          ),
-                                        ),
-                                      ),
-                                      child: TextField(
-                                        key: const Key('toggle-searchfield'),
-                                        focusNode: _textFieldFocus,
-                                        controller: _textEditingController,
-                                        style: widget.searchFieldTextStyle,
-                                        decoration: widget
-                                                .searchFieldInputDecoration ??
-                                            InputDecoration(
-                                              contentPadding:
-                                                  const EdgeInsets.only(
-                                                left: 6,
-                                              ),
-                                              hintText: 'Type here to search',
-                                              hintStyle: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide.none,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                            ),
-                                        onChanged: (value) {
-                                          if (widget.fuzzySearch ==
-                                              FuzzySearch.jaro) {
-                                            showedItems = allItems.where(
-                                              (item) {
-                                                return widget.fieldToCheck
-                                                        .call(item)
-                                                        .toLowerCase()
-                                                        .contains(value) ||
-                                                    (getJaro(
-                                                          widget.fieldToCheck
-                                                              .call(item),
-                                                          value,
-                                                        ) >=
-                                                        0.8);
-                                              },
-                                            ).toList();
-                                          } else if (widget.fuzzySearch ==
-                                              FuzzySearch.levenshtein) {
-                                            showedItems = allItems.where(
-                                              (item) {
-                                                return widget.fieldToCheck
-                                                        .call(item)
-                                                        .toLowerCase()
-                                                        .contains(value) ||
-                                                    (getLevenshtein(
-                                                          widget.fieldToCheck
-                                                              .call(item),
-                                                          value,
-                                                        ) <=
-                                                        2);
-                                              },
-                                            ).toList();
-                                          } else {
-                                            showedItems = allItems
-                                                .where(
-                                                  (item) => widget.fieldToCheck
-                                                      .call(item)
-                                                      .toLowerCase()
-                                                      .contains(value),
-                                                )
-                                                .toList();
-                                          }
-                                          setState(() {});
-                                          stateSetter(() {});
-                                        },
-                                      ),
-                                    ),
-                                    Container(
-                                      constraints: BoxConstraints(
-                                        maxHeight:
-                                            widget.maximumShowItemsHeight,
-                                      ),
-                                      decoration: widget
-                                              .showedItemsBoxDecoration ??
-                                          BoxDecoration(
-                                            color: widget
-                                                    .showedItemsBackgroundColor ??
-                                                Colors.grey.withOpacity(0.1),
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: widget
-                                                        .outerContainerBorderColor ??
-                                                    Colors.grey
-                                                        .withOpacity(0.5),
-                                              ),
-                                              left: BorderSide(
-                                                color: widget
-                                                        .outerContainerBorderColor ??
-                                                    Colors.grey
-                                                        .withOpacity(0.5),
-                                              ),
-                                              right: BorderSide(
-                                                color: widget
-                                                        .outerContainerBorderColor ??
-                                                    Colors.grey
-                                                        .withOpacity(0.5),
-                                              ),
-                                            ),
-                                          ),
-                                      child: RawScrollbar(
-                                        controller: widget
-                                                .showedItemsScrollController ??
-                                            _showedItemsScrollController,
-                                        thumbColor:
-                                            widget.showedItemsScrollbarColor,
-                                        thickness: widget
-                                                .showedItemsScrollbarMinThumbLength ??
-                                            10,
-                                        minThumbLength: widget
-                                                .showedItemsScrollbarMinThumbLength ??
-                                            30,
-                                        minOverscrollLength: widget
-                                                .showedItemsScrollbarMinOverscrollLength ??
-                                            5,
-                                        radius:
-                                            widget.showedItemsScrollbarRadius ??
-                                                const Radius.circular(5),
-                                        thumbVisibility:
-                                            widget.showShowedItemsScrollbar,
-                                        child: ScrollConfiguration(
-                                          behavior:
-                                              ScrollConfiguration.of(context)
-                                                  .copyWith(
-                                            scrollbars: false,
-                                          ),
-                                          child: ListView(
-                                            padding: EdgeInsets.zero,
-                                            primary: false,
-                                            shrinkWrap: true,
-                                            controller: widget
-                                                    .showedItemsScrollController ??
-                                                _showedItemsScrollController,
-                                            children: showedItems.isEmpty
-                                                ? [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                        6.0,
-                                                      ),
-                                                      child: widget
-                                                              .noResultsWidget ??
-                                                          const Text(
-                                                            'No results',
-                                                          ),
-                                                    )
-                                                  ]
-                                                : showedItems.map((T item) {
-                                                    return GestureDetector(
-                                                      behavior: HitTestBehavior
-                                                          .opaque,
-                                                      onTap: () {
-                                                        _onAddItem(item);
-                                                        stateSetter(() {});
-                                                        setState(() {});
-                                                      },
-                                                      child: IgnorePointer(
-                                                        child:
-                                                            widget.itemBuilder(
-                                                          item,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ).whenComplete(() {
-                          _textEditingController.clear();
-                          showedItems = allItems;
-                        });
-                      },
-                      child: IgnorePointer(
-                        child:
-                            widget.showItemsButton ?? const Text('Show items'),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                  ],
                   if (widget.showSelectAllButton ?? true)
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
@@ -926,10 +922,7 @@ class _MultipleSearchSelectionState<T>
                   InputDecoration(
                     contentPadding: const EdgeInsets.only(left: 6),
                     hintText: 'Type here to search',
-                    hintStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    hintStyle: widget.searchFieldHintStyle,
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                       borderRadius: BorderRadius.circular(20),
